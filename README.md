@@ -7,6 +7,9 @@ https://chatlibre.vercel.app
 ## Facilité d'utilisation
 ConsuLex AI est construit pour être simple à utiliser. Vous pouvez ajouter vos fichiers simplement à partir de l'interface graphique, mais aussi directement dans le dossier `files`.
 Les formats de fichers qui sont supportées sont le **Markdown** ainsi que le **texte brute**. Il est fortement conseillé d'utiliser la première option. Vous pouvez tout à fait **exporter vos docx et autres en Markdown** directement depuis votre éditeur de texte favoris. Et pour les plus courageux, vous avez la possibilité d'écrire directement vos fichers avec l'extension `.md`. Mais ça requiert d'apprendre une nouvelle façon de structurer des documents. Tous le texte que vous lisez actuellement est écrit directement en **Markdown**.
+## Valeur ajoutée à ConsuLex
+Je pense qu'une IA personnalisé qui ne partagerait pas ses données avec des tiers, ça peut vraiment être utile. Il faut vivre avec son temps et nous sommes dans une aire où les technologies évoluent très rapidement. Il y a peine 3 ans, nous n'entendions même pas parler d'intelligence artificielle. C'est pour ça que je suis pour la démocratisation de l'IA au plus grand nombre et notamment chez `ConsuLex`. J'espère que ce code sera utilisé par cette ASBL un jour. N'oubliez jamais que le fond est plus important que la forme.
+
 ## Installation
 Tout d'abord, installer python en vous rendant sur https://python.org.
 
@@ -51,6 +54,3 @@ Par contre, dans le cas où ce n'est pas pour une utilisation personnelle mais p
 Il vous faudra mettre en place un serveur disponible sur internet. Pour cela, d'abord, procurez-vous un vps ou un serveur avec une puissance minimale. Ensuite, installez Caddy et suivez les instructions afin de le configurer. Je vous conseille aussi de demander à quelqu'un qui s'y connait en informatique si vous n'êtes pas encore à l'aise avec le terminal et toutes ces choses là.
 
 Lien vers la documentation de Caddy : https://caddyserver.com/docs/
-
-## Valeur ajoutée à ConsuLex
-Je pense qu'une IA personnalisé qui ne partagerait pas ses données avec des tiers, ça peut vraiment être utile. Il faut vivre avec son temps et nous sommes dans une aire où les technologies évoluent très rapidement. Il y a peine 3 ans, nous n'entendions même pas parler d'intelligence artificielle. C'est pour ça que je suis pour la démocratisation de l'IA au plus grand nombre et notamment chez `ConsuLex`. J'espère que ce code sera utilisé par cette ASBL un jour. N'oubliez jamais que le fond est plus important que la forme.
