@@ -11,7 +11,8 @@ echo "Creation de l'environnement Conda 'conda-env'..."
 conda create --prefix ./conda-env python=3.10 -y
 
 echo "Installation des dependances..."
-call conda run --prefix ./conda-env pip install faiss-cpu numpy llama-cpp-python sentence-transformers Flask
+conda install -c pytorch faiss-cpu
+call conda run --prefix ./conda-env pip install numpy llama-cpp-python sentence-transformers Flask
 
 echo.
 echo "=== Installation terminee ==="
