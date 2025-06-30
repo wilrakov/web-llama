@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulex AI</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="app-layout">
+        <aside id="sidebar">
+            <div id="sidebar-header">
+                <h1>Llama3.2:1b</h1>
+                <div class="sidebar-actions">
+                    <button id="new-chat-btn" title="Nouvelle discussion">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                        </svg>
+                    </button>
+                    <button id="delete-conv-btn" title="Supprimer la discussion">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="history-area">
+                <ul id="history-list"></ul>
+            </div>
+            <div id="upload-area">
+                <h2>Base de connaissances</h2>
+                <input type="file" id="file-input" accept=".md,.txt" multiple>
+                <label for="file-input" id="upload-label">Choisir des fichiers</label>
+                <button id="upload-btn">Mettre à jour</button>
+                <button id="theme-toggle">Changer de thème</button>
+            </div>
+        </aside>
+        <main id="chat-container">
+            <div id="chat-header">
+                <button id="menu-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="chat-window"></div>
+            <div id="input-area">
+                <div id="input-wrapper">
+                    <textarea id="user-input" placeholder="Envoyer un message..." rows="1"></textarea>
+                    <button id="send-btn" title="Envoyer">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="transform: translateX(1px);">
+                            <path d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l5.17-14.547zM1.59 6.638 14.14 1.46l-5.57 9.92-2.8-1.75-2.18-1.36z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const ui = {
+                sidebar: document.getElementById('sidebar'),
+                menuBtn: document.getElementById('menu-btn'),
+                appLayout: document.getElementById('app-layout'),
+                themeToggle: document.getElementById('theme-toggle'),
+                newChatBtn: document.getElementById('new-chat-btn'),
+                deleteConvBtn: document.getElementById('delete-conv-btn'),
+                historyList: document.getElementById('history-list'),
+                chatWindow: document.getElementById('chat-window'),
+                userInput: document.getElementById('user-input'),
+                sendBtn: document.getElementById('send-btn'),
+                uploadBtn: document.getElementById('upload-btn'),
+                fileInput: document.getElementById('file-input'),
+                uploadLabel: document.getElementById('upload-label')
+            };
+
+            let currentConversationId = null;
+
+            function init() {
+                loadTheme();
+                setupEventListeners();
+                loadConversations().then(conversations => {
+                    if (conversations.length === 0) {
+                        handleNewConversation();
+                    } else {
+                        switchConversation(conversations[0].id);
+                    }
+                });
+            }
+
+            function setupEventListeners() {
+                ui.themeToggle.addEventListener('click', toggleTheme);
+                ui.newChatBtn.addEventListener('click', handleNewConversation);
+                ui.deleteConvBtn.addEventListener('click', handleDeleteConversation);
+                ui.sendBtn.addEventListener('click', sendMessage);
+                ui.userInput.addEventListener('keypress', handleInputKeypress);
+                ui.uploadBtn.addEventListener('click', uploadFiles);
+                ui.fileInput.addEventListener('change', updateUploadLabel);
+
+                // Sidebar visibility on mobile
+                ui.menuBtn.addEventListener('click', () => {
+                    ui.sidebar.classList.toggle('visible');
+                    ui.appLayout.classList.toggle('sidebar-visible');
+                });
+                ui.appLayout.addEventListener('click', (e) => {
+                    if (ui.sidebar.classList.contains('visible') && e.target === ui.appLayout) {
+                        ui.sidebar.classList.remove('visible');
+                        ui.appLayout.classList.remove('sidebar-visible');
+                    }
+                });
+                ui.sidebar.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent clicks inside sidebar from closing it
+                });
+            }
+
+            function loadTheme() {
+                const theme = localStorage.getItem('theme') || 'light-mode';
+                document.body.className = theme;
+                updateIconColors(theme);
+            }
+
+            function toggleTheme() {
+                const newTheme = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+                document.body.className = newTheme;
+                localStorage.setItem('theme', newTheme);
+                updateIconColors(newTheme);
+            }
+
+            function updateIconColors(theme) {
+                const color = theme === 'dark-mode' ? '#e0e0e0' : '#21275c';
+                document.querySelectorAll('#sidebar-header button svg, #chat-header button svg').forEach(svg => {
+                    svg.setAttribute('fill', color);
+                });
+            }
+
+            async function loadConversations() {
+                const response = await fetch('/api/conversations');
+                const conversations = await response.json();
+                ui.historyList.innerHTML = '';
+                conversations.forEach(conv => addConversationToHistory(conv.id, conv.title));
+                return conversations;
+            }
+
+            async function handleNewConversation() {
+                const response = await fetch('/api/conversations', { method: 'POST' });
+                const newConv = await response.json();
+                addConversationToHistory(newConv.id, newConv.title, true);
+                switchConversation(newConv.id);
+            }
+
+            async function handleDeleteConversation() {
+                if (!currentConversationId || currentConversationId.startsWith('temp-')) return;
+                if (confirm("Êtes-vous sûr de vouloir supprimer cette conversation ?")) {
+                    await fetch(`/api/conversations/${currentConversationId}`, { method: 'DELETE' });
+                    document.querySelector(`#history-list li[data-id='${currentConversationId}']`).remove();
+                    const conversations = await loadConversations();
+                    if (conversations.length > 0) {
+                        switchConversation(conversations[0].id);
+                    } else {
+                        handleNewConversation();
+                    }
+                }
+            }
+
+            function addConversationToHistory(id, title, setActive = false) {
+                const li = document.createElement('li');
+                li.dataset.id = id;
+                li.textContent = title;
+                li.addEventListener('click', () => switchConversation(id));
+                ui.historyList.prepend(li);
+                if (setActive) {
+                    setActiveConversation(id);
+                }
+            }
+
+            async function switchConversation(id) {
+                if (currentConversationId === id) return;
+                currentConversationId = id;
+                setActiveConversation(id);
+                ui.chatWindow.innerHTML = '<div class="message bot-message"><p>Chargement...</p></div>';
+                const response = await fetch(`/api/conversations/${id}`);
+                const conversation = await response.json();
+                ui.chatWindow.innerHTML = '';
+                if (conversation.messages.length === 0) {
+                    appendMessage('Bonjour, comment puis-je vous aider ?', 'bot-message');
+                } else {
+                    conversation.messages.forEach(msg => appendMessage(msg.content, `${msg.role}-message`));
+                }
+            }
+
+            function setActiveConversation(id) {
+                document.querySelectorAll('#history-list li').forEach(li => {
+                    li.classList.toggle('active', li.dataset.id === id);
+                });
+            }
+
+            function handleInputKeypress(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            }
+
+            async function sendMessage() {
+                const content = ui.userInput.value.trim();
+                if (!content || !currentConversationId) return;
+
+                appendMessage(content, 'user-message');
+                ui.userInput.value = '';
+                ui.userInput.style.height = 'auto'; // Reset height after sending
+                showTypingIndicator();
+
+                const response = await fetch('/api/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: content, conversation_id: currentConversationId })
+                });
+
+                const data = await response.json();
+                hideTypingIndicator();
+                appendMessage(data.answer, 'bot-message');
+                if (data.new_title) {
+                    document.querySelector(`#history-list li[data-id='${currentConversationId}']`).textContent = data.new_title;
+                }
+            }
+
+            function appendMessage(text, className) {
+                const p = document.createElement('p');
+                p.textContent = text;
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${className}`;
+                messageDiv.appendChild(p);
+                ui.chatWindow.appendChild(messageDiv);
+                ui.chatWindow.scrollTop = ui.chatWindow.scrollHeight;
+            }
+
+            async function uploadFiles() {
+                if (ui.fileInput.files.length === 0) {
+                    appendMessage('Veuillez sélectionner au moins un fichier.', 'system-notification');
+                    return;
+                }
+                const formData = new FormData();
+                for (const file of ui.fileInput.files) {
+                    formData.append('files', file);
+                }
+                appendMessage(`Mise à jour avec ${ui.fileInput.files.length} fichier(s)...`, 'system-notification');
+                showTypingIndicator();
+                const response = await fetch('/api/upload', { method: 'POST', body: formData });
+                const data = await response.json();
+                hideTypingIndicator();
+                appendMessage(data.message || data.error, 'system-notification');
+                ui.fileInput.value = '';
+                updateUploadLabel();
+            }
+
+            function updateUploadLabel() {
+                ui.uploadLabel.textContent = ui.fileInput.files.length > 0 ? `${ui.fileInput.files.length} fichier(s)` : 'Choisir des fichiers';
+            }
+
+            let typingIndicator;
+            function showTypingIndicator() {
+                if (typingIndicator) return;
+                const chatWindow = document.getElementById('chat-window');
+                typingIndicator = document.createElement('div');
+                typingIndicator.className = 'message bot-message';
+                typingIndicator.innerHTML = `
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>`;
+                chatWindow.appendChild(typingIndicator);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+
+            function hideTypingIndicator() {
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                    typingIndicator = null;
+                }
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>
